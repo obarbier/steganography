@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
+	"image/png"
 	"io"
 	"reflect"
 	"strings"
@@ -13,10 +14,10 @@ import (
 )
 
 func NewMockedImage(format string) *MockedImage {
-	newImage := image.NewRGBA(image.Rect(0, 0, 125, 125))
+	newImage := image.NewRGBA(image.Rect(0, 0, 500, 500))
 	newImage.Pix[0] = 255 // 1st pixel red
-	newImage.Pix[1] = 0   // 1st pixel green
-	newImage.Pix[2] = 0   // 1st pixel blue
+	newImage.Pix[1] = 255 // 1st pixel green
+	newImage.Pix[2] = 255 // 1st pixel blue
 	newImage.Pix[3] = 255 // 1st pixel alpha
 
 	return &MockedImage{
@@ -35,6 +36,10 @@ func (m MockedImage) Read(p []byte) (int, error) {
 	switch strings.ToUpper(m.Format) {
 	case "JPEG":
 		if err := jpeg.Encode(buf, m.i, nil); err != nil {
+			return 0, err
+		}
+	case "PNG":
+		if err := png.Encode(buf, m.i); err != nil {
 			return 0, err
 		}
 	default:
@@ -59,6 +64,11 @@ func TestNew(t *testing.T) {
 		{
 			name:    "testing jpeg",
 			args:    args{reader: NewMockedImage("jpeg")},
+			wantErr: false,
+		},
+		{
+			name:    "testing png",
+			args:    args{reader: NewMockedImage("png")},
 			wantErr: false,
 		},
 	}

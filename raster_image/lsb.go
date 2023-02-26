@@ -4,25 +4,27 @@ import (
 	"bytes"
 	"encoding/binary"
 	"image"
-	"image/jpeg"
+	"image/draw"
+	_ "image/jpeg"
+	"image/png"
 	"io"
 	"log"
 )
 
 type LSB struct {
-	i    *image.Image
+	i    *image.NRGBA
 	data *LSBData
 }
 
 func (j *LSB) Write(writer io.Writer) (int, error) {
-	var opt jpeg.Options
-	opt.Quality = 98
-	err := jpeg.Encode(writer, *j.i, &opt) // https://en.wikipedia.org/wiki/Chroma_subsampling
+	// https://en.wikipedia.org/wiki/Chroma_subsampling
+	// jpeg encoding using native library cause chroma subsampling 4:2:0
+	// saving file has format instead.
+	err := png.Encode(writer, j.i)
 	if err != nil {
 		return 0, err
 	}
-	//return len(j.i.Pix), nil
-	return 120, nil
+	return len(j.i.Pix), nil
 }
 
 type LSBData struct {
@@ -56,14 +58,11 @@ func (l *LSBData) GetBytes() []byte {
 func New(reader io.Reader) (*LSB, error) {
 	source, format, err := image.Decode(reader)
 	log.Printf("reading format %s", format)
-
-	//source, err := jpeg.Decode(reader)
-
 	if err != nil {
 		return nil, err
 	}
-	//bounds := source.Bounds()
-	//m := image.NewRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
-	//draw.Draw(m, m.Bounds(), source, bounds.Min, draw.Src)
-	return &LSB{i: &source}, nil
+	bounds := source.Bounds()
+	m := image.NewNRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+	draw.Draw(m, m.Bounds(), source, bounds.Min, draw.Src)
+	return &LSB{i: m}, nil
 }

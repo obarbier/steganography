@@ -108,7 +108,7 @@ func encode() {
 	baseNameWithExt := filepath.Base(coverPath)
 	log.Printf("baseNameWithExt=%s", baseNameWithExt)
 	baseName := strings.Split(baseNameWithExt, ".")
-	outputFileName := strings.Join(baseName, "_embedded.")
+	outputFileName := strings.Join([]string{baseName[0], "png"}, "_embedded.")
 	log.Printf("create output file: %s", outputFileName)
 	embeddedFile, createFileErr := os.Create(outputFileName)
 	if createFileErr != nil {
